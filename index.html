@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <script>
+    let globalId = 1;
+    let todoState = [];
+    let oldTodoState = [];
+
+    function addTodoToDom(newTodos) {
+      for(const todo of newTodos){
+        const todoCont = document.createElement('div');
+        todoCont.id = todo.id;
+
+        const title = document.createElement('span');
+        title.innerText = todo.title;
+        const desc = document.createElement('p');
+        desc.innerText = todo.description;
+        
+        todoCont.append(title, desc);
+
+        const mainDiv = document.getElementById('todos');
+        mainDiv.appendChild(todoCont);
+      }
+    }
+
+    function removeTodoFromDom(todo) {
+      if(!todo)return;
+      const todoId = todo.id;
+      const element = document.getElementById(todoId);
+      if(!element)return;
+      element.remove();
+      return;
+    }
+
+    function updateTodoInDom(newTodo) {
+      if(!newTodo)return;
+      const element = newTodo.id;
+      if(!element)return;
+
+      element.children[0].innerText = newTodo.title;
+      element.children[1].innerText = newTodo.description;
+      return;
+    }
+
+    function areObjectsEqualOnId(obj1, obj2) {
+      return obj1.id === obj2.id
+    }
+
+    function areObjectsEqualOnAllVals(obj1, obj2) {
+      return obj1 === obj2
+    }
+
+    function updateState(newTodos) {
+      // calculate the diff b/w newTodos and oldTodos.
+      // More specifically, find out what todos are - 
+      // 1. added
+      // 2. deleted
+      // 3. updated
+      let added = [];
+      let deleted = [];
+      let updated = [];
+      // calculate these 3 arrays
+      added = newTodos.filter(newObj => {
+        const notFoundInOldArray = !oldTodoState.some(oldObj => areObjectsEqualOnId(oldObj, newObj));
+        return notFoundInOldArray;
+      });
+      updated = newTodos.filter(newObj => {
+        const foundInOldArray = oldTodoState.some(oldObj => {
+          const found = areObjectsEqualOnId(oldObj, newObj);
+          return (found && !areObjectsEqualOnVals(oldObj, newObj));
+        });
+        return foundInOldArray;
+      });
+      deleted = oldTodoState.filter(oldObj => {
+        const notFoundInNewArray = !newTodos.some(newObj => {
+          return areObjectsEqualOnId(oldObj, newObj)
+        });
+        return notFoundInNewArray;
+      });
+      
+      // call addTodo, removeTodo, updateTodo functions on each of the elements
+      addTodoToDom(added);
+      for(let todo of deleted){
+        removeTodoFromDom(todo)
+      }
+      for(let todo of updated){
+        updateTodoInDom(todo)
+      }
+      
+      oldTodoState = newTodos;
+    }
+
+    function addTodo() {
+      const title = document.getElementById("title").value;
+      const description = document.getElementById("description").value;
+      todoState.push({
+        title: title,
+        description: description,
+        id: globalId++,
+      })
+      updateState(todoState);
+    }
+  </script>
+</head>
+
+<body>
+  <input type="text" id="title" placeholder="Todo title"></input> <br /><br />
+  <input type="text" id="description" placeholder="Todo description"></input> <br /><br />
+  <button onclick="addTodo()">Add todo</button>
+  <br /> <br />
+  <div id="todos">
+  </div>
+</body>
+
+</html>
